@@ -140,7 +140,7 @@ def plot_all_orbits(time=100, init_angle=0):
 # -------------------------------------------------------------------------------------
 
 
-def animate_orbit():
+def animate_orbit(days):
 
     # create figure
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -187,7 +187,7 @@ def animate_orbit():
     ani = FuncAnimation(
         fig,
         update,
-        frames=range(365),
+        frames=range(days),
         interval = 50, # ms
         blit=False,
         repeat=False
@@ -215,7 +215,8 @@ if __name__ == "__main__":
     time = 100  # days
     resolution = 100
     init_angle = 0
+    days = 365
 
     # plot_orbit(planet)
     # plot_all_orbits()
-    animate_orbit()
+    animate_orbit(days)
