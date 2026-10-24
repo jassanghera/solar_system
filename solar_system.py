@@ -7,7 +7,6 @@ from matplotlib.animation import FuncAnimation
 # FUNCTIONS
 # -------------------------------------------------------------------------------------
 
-
 # using Kepler's 3rd Law
 def calc_orb_period(r):
     orb_period = math.sqrt(r**3)
@@ -140,7 +139,7 @@ def plot_all_orbits(time=100, init_angle=0):
 # -------------------------------------------------------------------------------------
 
 
-def animate_orbit(days):
+def animate_orbit(frames, days_per_frame):
 
     # create figure
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -172,33 +171,27 @@ def animate_orbit(days):
         x, y = planet_position(planet)
         planet_markers[planet] = ax.scatter(x, y)
 
-    # # test updating marker by calling the update function
-    # update(100, planet_markers)
-
     # define update function for FuncAnimation
     def update(frame):
 
+        sim_time = frame * days_per_frame
+
         for planet, planet_artist in planet_markers.items():
 
-            offset = [planet_position(planet, frame)]
+            offset = [planet_position(planet, sim_time)]
             planet_artist.set_offsets(offset)
     
     # animation controller
     ani = FuncAnimation(
         fig,
         update,
-        frames=range(days),
+        frames=range(frames),
         interval = 50, # ms
         blit=False,
         repeat=False
     )
 
-
-
     plt.show()
-
-
-
 
 
 
@@ -215,8 +208,10 @@ if __name__ == "__main__":
     time = 100  # days
     resolution = 100
     init_angle = 0
-    days = 365
+    days = 365*2
+    days_per_frame = 5
+    frames = round(days/days_per_frame) + 1
 
     # plot_orbit(planet)
     # plot_all_orbits()
-    animate_orbit(days)
+    animate_orbit(frames, days_per_frame)
