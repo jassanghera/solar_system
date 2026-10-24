@@ -1,6 +1,7 @@
 # create a small python program that calculates Earth's position relative to the sun at any given time
 import math
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 # -------------------------------------------------------------------------------------
 # FUNCTIONS
@@ -30,17 +31,26 @@ def planet_position(planet, time=0, init_angle=0):
 
     return x_position, y_position
 
-
-# generate list of orbital coordinates at given resolution
-def positions_list(planet, resolution=100, init_angle=0):
+def time_points(planet, resolution=100):
     r = planets[planet]
     orb_period = calc_orb_period(r)
 
     time_points = [(i * orb_period / resolution) for i in range(resolution + 1)]
-    positions = [(planet_position(planet, t, init_angle)) for t in time_points]
+
+    return time_points
+
+
+# generate list of orbital coordinates at given resolution
+def positions_list(planet, init_angle=0):
+
+    time_points_list = time_points(planet)
+    positions = [(planet_position(planet, t, init_angle)) for t in time_points_list]
 
     return positions
 
+# -------------------------------------------------------------------------------------
+# UTILITIES - printing
+# -------------------------------------------------------------------------------------
 
 # pretty print the position of the planet at each time point
 def print_positions(positions):
@@ -51,12 +61,15 @@ def print_positions(positions):
 def print_planet_at_time(planet, time, planet_position):
     print(f"At time {time} days, {planet} is at position: {planet_position}")
 
+# -------------------------------------------------------------------------------------
+# STATIC PLOTS
+# -------------------------------------------------------------------------------------
 
-def plot_orbit(planet, resolution, time=100, init_angle=0):
+def plot_orbit(planet, time=100, init_angle=0):
 
     x, y = planet_position(planet, time, init_angle)
 
-    positions = positions_list(planet, resolution)
+    positions = positions_list(planet)
     x_positions = [pos[0] for pos in positions]
     y_positions = [pos[1] for pos in positions]
 
@@ -82,14 +95,14 @@ def plot_orbit(planet, resolution, time=100, init_angle=0):
     plt.show()
 
 
-def plot_all_orbits(resolution, time=100, init_angle=0):
+def plot_all_orbits(time=100, init_angle=0):
 
     plt.figure(figsize=(8, 8))
 
     for planet in planets.keys():
 
         # for each planet, generate the x and y positions and store in dictionary to use in plotting orbit
-        positions = positions_list(planet, resolution)
+        positions = positions_list(planet)
         x_positions = [pos[0] for pos in positions]
         y_positions = [pos[1] for pos in positions]
 
@@ -122,42 +135,73 @@ def plot_all_orbits(resolution, time=100, init_angle=0):
     plt.show()
 
 
+# -------------------------------------------------------------------------------------
+# ANIMATED ORBITS
+# -------------------------------------------------------------------------------------
+
+
 def animate_orbit():
 
-    plt.figure(figsize=(8, 8))
-    plt.axis("equal")
-    plt.grid(True, alpha=0.3)
-    plt.xlabel("AU")
-    plt.ylabel("AU")
-    plt.title("The Solar System")
-    plt.scatter(0, 0, c="yellow", s=1000, label="Sun")
-    plt.annotate(
+    # create figure
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.axis("equal")
+    ax.grid(True, alpha=0.3)
+    ax.set_xlabel("AU")
+    ax.set_ylabel("AU")
+    ax.set_title("The Solar System")
+    ax.scatter(0, 0, c="yellow", s=1000, label="Sun") # draw sun
+    ax.annotate(
         "Sun", xy=(0, 0), textcoords="offset points", xytext=(15, 15), ha="center"
     )
 
+    # planet_markers dictionary has (key:value) pairs of ("name" : Artist object)
     planet_markers = {}
 
     for planet in planets.keys():
 
         # draw the orbital path for each planet
-        positions = positions_list(planet, resolution)
+        positions = positions_list(planet)
         x_positions = [pos[0] for pos in positions]
         y_positions = [pos[1] for pos in positions]
 
-        plt.plot(
+        ax.plot(
             x_positions, y_positions, ls="--", label=f"{planet.capitalize()}'s Orbit"
         )
 
         # initialize the planet markers and store the Artist object in a dictionary for later update
         x, y = planet_position(planet)
-        planet_markers[planet] = plt.scatter(x, y)
+        planet_markers[planet] = ax.scatter(x, y)
 
-    # test updating marker by using new coordinates for earth at day 100
-    offsets = [planet_position("earth", 100)]
-    earth = planet_markers["earth"]
-    earth.set_offsets(offsets)
+    # # test updating marker by calling the update function
+    # update(100, planet_markers)
+
+    # define update function for FuncAnimation
+    def update(frame):
+
+        for planet, planet_artist in planet_markers.items():
+
+            offset = [planet_position(planet, frame)]
+            planet_artist.set_offsets(offset)
+    
+    # animation controller
+    ani = FuncAnimation(
+        fig,
+        update,
+        frames=range(365),
+        interval = 50, # ms
+        blit=False,
+        repeat=False
+    )
+
+
 
     plt.show()
+
+
+
+
+
+
 
 
 
@@ -172,6 +216,6 @@ if __name__ == "__main__":
     resolution = 100
     init_angle = 0
 
-    # plot_orbit(planet, resolution)
-    # plot_all_orbits(resolution)
+    # plot_orbit(planet)
+    # plot_all_orbits()
     animate_orbit()
