@@ -208,7 +208,7 @@ def animate_orbit(days):
 if __name__ == "__main__":
 
     # "planet name": orbital radius in AU
-    planets = {"venus": 0.723, "earth": 1, "mars": 1.52}
+    planets = {"mercury": 0.387, "venus": 0.723, "earth": 1, "mars": 1.52}
 
     # for testing purposes, hardcode the planet and time
     planet = "mars"
