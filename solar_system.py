@@ -144,14 +144,23 @@ def animate_orbit(num_frames, days_per_frame):
     plt.style.use('dark_background')
 
     # create figure
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(8, 8))
     ax.axis("equal")
     ax.set_axis_off()
-    # ax.grid(True, alpha=0.1)
-    # ax.set_xlabel("AU")
-    # ax.set_ylabel("AU")
-    ax.set_title("The Solar System")
-    ax.scatter(0, 0, c="#FBBF24", s=2000, label="Sun") # draw sun
+    ax.set_title("Inner Solar System")
+
+    # Glow layers (larger, more transparent markers underneath) for sun
+    glow_sizes = [6000, 4000, 2500]
+    glow_alphas = [0.1, 0.15, 0.2]
+
+    for size, alpha in zip(glow_sizes, glow_alphas):
+        ax.scatter(
+            0, 0, s=size, color="#FBBF24", alpha=alpha, edgecolors="none", zorder=1
+        )
+
+    sun = ax.scatter(0, 0, c="#FBBF24", s=2000, label="Sun", alpha=1.0, zorder=2) # draw sun
+
+
     # xy property id's point being annotated, an annotations anchor point is changed by updating this xy attribute
     ax.annotate(
         "Sun", xy=(0, 0), textcoords="offset points", xytext=(22, 20), ha="center"
@@ -160,6 +169,19 @@ def animate_orbit(num_frames, days_per_frame):
     # planet_markers dictionary has (key:value) pairs of ("name" : Artist object)
     planet_markers = {}
     planet_labels = {}
+
+    # create dyanmic time display label
+    text_artist = ax.text(0.97, 0.97, "Day 0",
+        transform=ax.transAxes, 
+        ha='right', 
+        va='top',
+        fontsize=12, 
+        bbox={
+        "boxstyle": "round,pad=0.5",
+        "facecolor": "#1B263B",
+        "edgecolor": "#53647A",
+        "alpha": 0.9
+    })
 
     for planet in planets.keys():
 
@@ -188,15 +210,15 @@ def animate_orbit(num_frames, days_per_frame):
 
         sim_time = frame * days_per_frame
 
+        text_artist.set_text(f"Day {math.floor(sim_time)}")
+
         for planet, planet_artist in planet_markers.items():
 
             offset = planet_position(planet, sim_time)
             planet_artist.set_offsets([offset])
         
             label = planet_labels[planet]
-            new_x = offset[0]
-            new_y = offset[1]
-            label.xy = (new_x, new_y)
+            label.xy = offset
     
     # animation controller
     ani = FuncAnimation(
@@ -213,24 +235,15 @@ def animate_orbit(num_frames, days_per_frame):
 
 
 
-
-
 if __name__ == "__main__":
 
-    # "planet name": [orbital radius in AU, colour code]
-    planets_x = {
-        "mercury": [0.387, '#A8A9AD'], 
-        "venus": [0.723, '#D9B779'], 
-        "earth": [1, '#60A5FA'],
-        "mars": [1.52, '#D97757']
-        }
+    # "planet name": {orbital radius in AU, colour code, size}
     
     planets = { 
-        "mercury": {"radius": 0.387, "colour": '#A8A9AD', "size": 100},
-        "venus": {"radius": 0.723, "colour": '#D9B779', "size": 250},
-        "earth": {"radius": 1, "colour": '#60A5FA', "size": 500},
-        "mars": {"radius": 1.52, "colour": '#D97757', "size": 350},
-
+        "mercury": {"radius": 0.387, "colour": '#A8A9AD', "size": 50},
+        "venus": {"radius": 0.723, "colour": '#D9B779', "size": 324},
+        "earth": {"radius": 1, "colour": '#60A5FA', "size": 400},
+        "mars": {"radius": 1.52, "colour": '#D97757', "size": 100},
     }
 
     # for testing purposes, hardcode the planet and time
@@ -239,7 +252,7 @@ if __name__ == "__main__":
     resolution = 100
     init_angle = 0
     days = 365*2
-    days_per_frame = 3
+    days_per_frame = 1.5
     num_frames = round(days/days_per_frame) + 1
 
     # plot_orbit(planet)
