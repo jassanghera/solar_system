@@ -20,7 +20,7 @@ def calc_orb_period(r):
 # function to calculate position
 def planet_position(planet, time=0, init_angle=0):
 
-    r = planets[planet]
+    r = planets[planet]["radius"]
     orb_period = calc_orb_period(r)
 
     w = (2 * math.pi) / orb_period
@@ -31,7 +31,7 @@ def planet_position(planet, time=0, init_angle=0):
     return x_position, y_position
 
 def time_points(planet, resolution=100):
-    r = planets[planet]
+    r = planets[planet]["radius"]
     orb_period = calc_orb_period(r)
 
     time_points = [(i * orb_period / resolution) for i in range(resolution + 1)]
@@ -139,22 +139,27 @@ def plot_all_orbits(time=100, init_angle=0):
 # -------------------------------------------------------------------------------------
 
 
-def animate_orbit(frames, days_per_frame):
+def animate_orbit(num_frames, days_per_frame):
+
+    plt.style.use('dark_background')
 
     # create figure
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=(10, 10))
     ax.axis("equal")
-    ax.grid(True, alpha=0.3)
-    ax.set_xlabel("AU")
-    ax.set_ylabel("AU")
+    ax.set_axis_off()
+    # ax.grid(True, alpha=0.1)
+    # ax.set_xlabel("AU")
+    # ax.set_ylabel("AU")
     ax.set_title("The Solar System")
-    ax.scatter(0, 0, c="yellow", s=1000, label="Sun") # draw sun
+    ax.scatter(0, 0, c="#FBBF24", s=2000, label="Sun") # draw sun
+    # xy property id's point being annotated, an annotations anchor point is changed by updating this xy attribute
     ax.annotate(
-        "Sun", xy=(0, 0), textcoords="offset points", xytext=(15, 15), ha="center"
+        "Sun", xy=(0, 0), textcoords="offset points", xytext=(22, 20), ha="center"
     )
 
     # planet_markers dictionary has (key:value) pairs of ("name" : Artist object)
     planet_markers = {}
+    planet_labels = {}
 
     for planet in planets.keys():
 
@@ -164,12 +169,19 @@ def animate_orbit(frames, days_per_frame):
         y_positions = [pos[1] for pos in positions]
 
         ax.plot(
-            x_positions, y_positions, ls="--", label=f"{planet.capitalize()}'s Orbit"
+            x_positions, y_positions, 
+            alpha=0.2,
+            linewidth=0.5,
+            label=f"{planet.capitalize()}'s Orbit",
+            color='white'
         )
 
         # initialize the planet markers and store the Artist object in a dictionary for later update
         x, y = planet_position(planet)
-        planet_markers[planet] = ax.scatter(x, y)
+        planet_markers[planet] = ax.scatter(x, y, color=f'{planets[planet]["colour"]}', s=planets[planet]["size"])
+
+        # initialize annotations and store Artist labels in dictionary
+        planet_labels[planet] = ax.annotate((f"{planet}").capitalize(), xy=(x, y), textcoords="offset points", xytext=(12, 12), ha="center")
 
     # define update function for FuncAnimation
     def update(frame):
@@ -178,14 +190,19 @@ def animate_orbit(frames, days_per_frame):
 
         for planet, planet_artist in planet_markers.items():
 
-            offset = [planet_position(planet, sim_time)]
-            planet_artist.set_offsets(offset)
+            offset = planet_position(planet, sim_time)
+            planet_artist.set_offsets([offset])
+        
+            label = planet_labels[planet]
+            new_x = offset[0]
+            new_y = offset[1]
+            label.xy = (new_x, new_y)
     
     # animation controller
     ani = FuncAnimation(
         fig,
         update,
-        frames=range(frames),
+        frames=range(num_frames),
         interval = 50, # ms
         blit=False,
         repeat=False
@@ -200,8 +217,21 @@ def animate_orbit(frames, days_per_frame):
 
 if __name__ == "__main__":
 
-    # "planet name": orbital radius in AU
-    planets = {"mercury": 0.387, "venus": 0.723, "earth": 1, "mars": 1.52}
+    # "planet name": [orbital radius in AU, colour code]
+    planets_x = {
+        "mercury": [0.387, '#A8A9AD'], 
+        "venus": [0.723, '#D9B779'], 
+        "earth": [1, '#60A5FA'],
+        "mars": [1.52, '#D97757']
+        }
+    
+    planets = { 
+        "mercury": {"radius": 0.387, "colour": '#A8A9AD', "size": 100},
+        "venus": {"radius": 0.723, "colour": '#D9B779', "size": 250},
+        "earth": {"radius": 1, "colour": '#60A5FA', "size": 500},
+        "mars": {"radius": 1.52, "colour": '#D97757', "size": 350},
+
+    }
 
     # for testing purposes, hardcode the planet and time
     planet = "mars"
@@ -209,9 +239,9 @@ if __name__ == "__main__":
     resolution = 100
     init_angle = 0
     days = 365*2
-    days_per_frame = 5
-    frames = round(days/days_per_frame) + 1
+    days_per_frame = 3
+    num_frames = round(days/days_per_frame) + 1
 
     # plot_orbit(planet)
     # plot_all_orbits()
-    animate_orbit(frames, days_per_frame)
+    animate_orbit(num_frames, days_per_frame)
